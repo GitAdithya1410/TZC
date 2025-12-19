@@ -29,11 +29,20 @@ def _system_tzinfo():
     tz = datetime.now().astimezone().tzinfo
     return tz if tz else timezone.utc
 
-def city_to_timezone(city):
-    loc = geolocator.geocode(city, exactly_one=True)
-    if not loc:
+def city_to_timezone(city: str) -> str:
+    r = requests.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": city, "count": 1, "language": "en", "format": "json"},
+        timeout=10
+    )
+    r.raise_for_status()
+    data = r.json()
+
+    results = data.get("results") or []
+    if not results:
         raise ValueError(f"City not found: {city}")
-    tz = tf.timezone_at(lat=loc.latitude, lng=loc.longitude)
+
+    tz = results[0].get("timezone")
     if not tz:
         raise ValueError(f"Timezone not found for: {city}")
     return tz
