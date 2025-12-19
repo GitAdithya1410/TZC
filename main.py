@@ -26,7 +26,6 @@ geolocator = Nominatim(user_agent="time_tool")
 tf = TimezoneFinder()
 
 def _system_tzinfo():
-    # Works on most machines. In Colab it’s usually UTC.
     tz = datetime.now().astimezone().tzinfo
     return tz if tz else timezone.utc
 
@@ -77,9 +76,6 @@ def convert_time(source_city: str, dest_city: str, date_time_str: str | None):
 
 
 
-
-result = result.strftime("%Y-%m-%d %H:%M")
-print(result)
 
 @app.get("/")
 def home():
