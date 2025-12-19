@@ -2,6 +2,16 @@ from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 from zoneinfo import ZoneInfo
 from datetime import datetime,timezone
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class TimeInput(BaseModel):
+    source_city: str = ""
+    dest_city: str = ""
+    date_time_str: str = ""
+
 
 geolocator = Nominatim(user_agent="time_tool")
 tf = TimezoneFinder()
