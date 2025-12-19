@@ -21,6 +21,14 @@ def _system_tzinfo():
     tz = datetime.now().astimezone().tzinfo
     return tz if tz else timezone.utc
 
+def city_to_timezone(city):
+    loc = geolocator.geocode(city, exactly_one=True)
+    if not loc:
+        raise ValueError(f"City not found: {city}")
+    tz = tf.timezone_at(lat=loc.latitude, lng=loc.longitude)
+    if not tz:
+        raise ValueError(f"Timezone not found for: {city}")
+    return tz
 
 def convert_time(source_city: str, dest_city: str, date_time_str: str | None):
     # UI can enforce this too, but backend should still guard it.
