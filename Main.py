@@ -69,3 +69,8 @@ result = convert_time(
 result = result.strftime("%Y-%m-%d %H:%M")
 print(result)
 
+@app.get("/")
+def home():
+    return {"status": "ok"}
+
+
