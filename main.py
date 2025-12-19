@@ -77,12 +77,7 @@ def convert_time(source_city: str, dest_city: str, date_time_str: str | None):
 
 
 
-# Example
-result = convert_time(
-    "London",
-    "USA",
-    ""
-)
+
 result = result.strftime("%Y-%m-%d %H:%M")
 print(result)
 
@@ -90,4 +85,12 @@ print(result)
 def home():
     return {"status": "ok"}
 
+@app.post("/convert")
+def convert_api(data: TimeInput):
+    result = convert_time(
+        data.source_city,
+        data.dest_city,
+        data.date_time_str
+    )
+    return {"result": result.strftime("%Y-%m-%d %H:%M")}
 
