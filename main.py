@@ -2,7 +2,7 @@ from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 from zoneinfo import ZoneInfo
 from datetime import datetime,timezone
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -81,12 +81,21 @@ def convert_time(source_city: str, dest_city: str, date_time_str: str | None):
 def home():
     return {"status": "ok"}
 
+# @app.post("/convert")
+# def convert_api(data: TimeInput):
+#     result = convert_time(
+#         data.source_city,
+#         data.dest_city,
+#         data.date_time_str
+#     )
+#     return {"result": result.strftime("%Y-%m-%d %H:%M")}
+
 @app.post("/convert")
 def convert_api(data: TimeInput):
-    result = convert_time(
-        data.source_city,
-        data.dest_city,
-        data.date_time_str
-    )
-    return {"result": result.strftime("%Y-%m-%d %H:%M")}
+    try:
+        result = convert_time(data.source_city, data.dest_city, data.date_time_str)
+        return {"result": result.strftime("%Y-%m-%d %H:%M")}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 
