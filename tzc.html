@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Time Zone Converter</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;background:#0b1220;color:#e8eefc}
+    .wrap{max-width:720px;margin:40px auto;padding:24px}
+    .card{background:#111a2e;border:1px solid #223055;border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    h1{margin:0 0 8px;font-size:22px}
+    p{margin:0 0 18px;color:#b8c6ea}
+    label{display:block;margin:14px 0 6px;color:#cfe0ff;font-weight:600}
+    input{width:100%;padding:12px 12px;border-radius:12px;border:1px solid #2a3a66;background:#0b1220;color:#e8eefc;outline:none}
+    input::placeholder{color:#7f8db2}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btns{display:flex;gap:10px;margin-top:16px}
+    button{padding:12px 14px;border-radius:12px;border:0;cursor:pointer;font-weight:700}
+    .primary{background:#2e6bff;color:#fff}
+    .ghost{background:transparent;color:#cfe0ff;border:1px solid #2a3a66}
+    .out{margin-top:16px;padding:14px;border-radius:12px;border:1px dashed #2a3a66;background:#0b1220}
+    .err{color:#ffb4b4}
+    .ok{color:#bdf7c4}
+    small{color:#90a3cf}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>City Time Converter</h1>
+      <p>Enter source + destination. Time is optional. If source is empty and time is empty, it shows destination time for your system “now”.</p>
+
+      <form id="tzForm">
+        <div class="row">
+          <div>
+            <label for="source">Source city (optional)</label>
+            <input id="source" name="source" placeholder="Hyderabad" autocomplete="off" />
+          </div>
+          <div>
+            <label for="dest">Destination city (required)</label>
+            <input id="dest" name="dest" placeholder="London" required autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label for="dt">Date & time (optional)</label>
+            <input id="dt" name="dt" placeholder="2025-01-15 18:30 or 10:10" autocomplete="off" />
+            <small>Accepts “YYYY-MM-DD HH:MM” or just “HH:MM”.</small>
+          </div>
+          <div>
+            <label for="mode">Mode</label>
+            <input id="mode" value="Auto (DST aware)" disabled />
+            <small>Your backend decides DST from the date.</small>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button class="primary" type="submit">Convert</button>
+          <button class="ghost" type="button" id="clearBtn">Clear</button>
+        </div>
+
+        <div class="out" id="output">
+          <div><strong>Result:</strong> <span id="resultText">—</span></div>
+          <div id="meta" style="margin-top:8px;"></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // TODO: change this to your backend endpoint (FastAPI etc.)
+    // Expected JSON response example:
+    // { "result": "2025-01-15 17:30", "src_tz": "Asia/Kolkata", "dst_tz": "Europe/London" }
+	const API_URL = "https://tzc.onrender.com/convert";
+
+    const form = document.getElementById("tzForm");
+    const resultText = document.getElementById("resultText");
+    const meta = document.getElementById("meta");
+    const clearBtn = document.getElementById("clearBtn");
+
+    function setOutput(msg, ok=true, extra=""){
+      resultText.textContent = msg;
+      resultText.className = ok ? "ok" : "err";
+      meta.innerHTML = extra;
+    }
+
+    clearBtn.addEventListener("click", () => {
+      form.reset();
+      setOutput("—", true, "");
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const source = document.getElementById("source").value.trim();
+      const dest = document.getElementById("dest").value.trim();
+      const dt = document.getElementById("dt").value.trim();
+
+      if (!dest) {
+        setOutput("Destination city is required.", false);
+        return;
+      }
+
+      // If your UI wants: block time when source empty (your table row 3)
+      // Uncomment if needed:
+      // if (!source && dt) { setOutput("Don’t enter time when source is empty.", false); return; }
+
+      setOutput("Converting…", true, "");
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source_city: source, dest_city: dest, date_time_str: dt })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Request failed");
+
+        const extra = `
+          <small>Source TZ: ${data.src_tz || "—"} | Destination TZ: ${data.dst_tz || "—"}</small>
+        `;
+        setOutput(data.result || JSON.stringify(data), true, extra);
+
+      } catch (err) {
+        setOutput(err.message || "Error", false, `<small>Tip: start backend at ${API_URL}</small>`);
+      }
+    });
+  </script>
+</body>
+</html>
